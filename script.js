@@ -7,83 +7,6 @@
    I18N
    ========================================================== */
 const I18N = {
-  en: {
-    step_count_1: "Step 1 of 3",
-    step_count_2: "Step 2 of 3",
-    step_count_3: "Step 3 of 3",
-    quote_request: "Booking <em>request</em>",
-    paulina_experience: "The Paulina <em>experience</em>",
-    hero_title: "Your Caribbean <em>escape</em>",
-    hero_sub: "Sun, sea and serenity on Curaçao — book your stay at Villa Paulina.",
-    add_date: "Add date",
-    search: "Search",
-    edit: "Edit",
-    clear: "Clear",
-    stay: "Your stay",
-    arrival: "Arrival",
-    departure: "Departure",
-    guests: "Guests",
-    adults: "Guests (4+ yrs)",
-    adults_sub: "Adults & older kids",
-    children: "Children (0–3)",
-    children_sub: "Up to 3 years old",
-    bedrooms: "Bedrooms",
-    bedrooms_hint: "Minimum 1 bedroom.",
-    checkout_std: "Standard checkout (10:00)",
-    checkout_late: "Late checkout (19:00)",
-    transfer: "Airport transfer (6+ yrs)",
-    next: "Next step",
-    prev: "Previous step",
-    submit: "Request quote",
-    car_rental: "Rental car",
-    car_desc: "Having your own ride makes exploring Curaçao effortless — hidden coves, local markets, sunset spots. Pick the car that fits your plans, or skip if you'd rather take taxis.",
-    nocar: "No car",
-    first_name: "First name", last_name: "Last name",
-    address: "Address", zip: "Postal code", city: "City", country: "Country",
-    phone: "Phone", email: "Email", comment: "Comments (optional)",
-    agree_text: "I understand the deposit is paid on-site (credit card or cash), and agree to receive a non-binding quote.",
-    thanks: "Thank you!",
-    hope_to_welcome: "We hope to welcome you soon",
-    ty_body: "You'll hear back from us within 24 hours. Keep an eye on your inbox — something special is coming. Curaçao is the perfect destination for a rich-cultured, sun-soaked getaway, and Villa Paulina is the perfect place to call home while you're here.",
-    ref_id: "Reference",
-    summary: "Your stay",
-    summary_head: "Price summary",
-    summary_empty_dates: "Select your dates to see pricing.",
-    summary_empty: "Your live price will appear here as you build your stay.",
-    total: "Total incl. tax",
-    deposit_note: "💡 Deposit is paid on-site by credit card or cash — no online payment required.",
-    cal_title: "Select your dates",
-    cal_sub: "Minimum stay is 7 nights. Greyed-out dates are unavailable.",
-    cal_pick_arrival: "Pick an arrival date",
-    cal_pick_departure: "Pick a departure date",
-    cal_nights: "nights",
-    cal_loading: "Loading availability…",
-    confirm_dates: "Confirm dates",
-    avail: "Available", unavail: "Unavailable", sel: "Selected",
-    alt_title: "These dates aren't available",
-    alt_sub: "We found similar stays — pick one to continue:",
-    min_bedrooms_for: "For {n} guests, a minimum of {b} bedrooms is required.",
-    line_villa: "Villa stay",
-    line_low_season_nights: "Low season nights",
-    line_high_season_nights: "High season nights",
-    line_cleaning: "Cleaning",
-    line_transfer: "Airport transfer",
-    line_car: "Rental car",
-    line_late_checkout: "Late checkout",
-    subtotal: "Subtotal",
-    tax: "Tax",
-    err_generic: "Something went wrong. Please try again.",
-    err_dates_required: "Please select your dates.",
-    err_form_incomplete: "Please fill in all required fields.",
-    err_min_stay: "Minimum stay is 7 nights.",
-    err_unavailable: "These dates aren't available. Please pick another range.",
-    err_network: "Connection problem. Please check your internet and try again.",
-    booking_failed: "Booking failed. Please try again.",
-    guest_word: "guest", guests_word: "guests",
-    bedroom_word: "bedroom", bedrooms_word: "bedrooms",
-    weekdays_short: ["Mo","Tu","We","Th","Fr","Sa","Su"],
-    months: ["January","February","March","April","May","June","July","August","September","October","November","December"],
-  },
   nl: {
     step_count_1: "Stap 1 van 3",
     step_count_2: "Stap 2 van 3",
@@ -163,7 +86,7 @@ const I18N = {
   }
 };
 
-let lang = 'en';
+let lang = 'nl';
 const t = (key) => I18N[lang][key] ?? key;
 
 function applyI18n(){
@@ -361,6 +284,7 @@ function updateBedroomOptions(){
   if (parseInt(sel.value, 10) < min) sel.value = String(min);
   if (state.bedrooms < min) state.bedrooms = min;
   sel.value = String(state.bedrooms);
+  if (sel.__cddSync) sel.__cddSync();
   document.getElementById('stepBedrooms').textContent = state.bedrooms;
   updateBedroomsHint();
   updateSearchBarLabels();
@@ -555,6 +479,42 @@ function selectDay(date){
     validateStep1();
   };
 
+  const commitDeparture = (d) => {
+    cal.draft.end = d;
+    state.checkout = d;
+    applyDateInputs();
+    updateSearchBarLabels();
+    track('booking_dates_selected', { start: isoDate(state.checkin), end: isoDate(state.checkout) });
+    validateDates();
+    renderCalendar();
+    // After committing the departure, close the calendar after a beat.
+    setTimeout(() => {
+      closeAllPops();
+      setActiveSegment(null);
+    }, 250);
+  };
+
+  // DEPARTURE MODE — user explicitly opened the calendar to change the
+  // check-out date. Don't reset the existing arrival; just update departure.
+  // (Standard booking-app behaviour.)
+  if (cal.pickingMode === 'departure' && cal.draft.start){
+    if (date <= cal.draft.start){
+      // Clicked a day <= the existing arrival: re-interpret as new arrival.
+      if (!avail.min_stay){ showToast(t('err_min_stay'), true); return; }
+      commitArrival(date);
+      renderCalendar();
+      return;
+    }
+    const nights = daysBetween(cal.draft.start, date);
+    if (nights < state.minimumStayNights){
+      showToast(t('err_min_stay'), true);
+      return;
+    }
+    commitDeparture(date);
+    return;
+  }
+
+  // ARRIVAL MODE / FRESH STATE — original flow.
   if (!cal.draft.start || (cal.draft.start && cal.draft.end)){
     if (!avail.min_stay){ showToast(t('err_min_stay'), true); return; }
     commitArrival(date);
@@ -568,18 +528,7 @@ function selectDay(date){
         showToast(t('err_min_stay'), true);
         return;
       }
-      cal.draft.end = date;
-      state.checkout = date;
-      applyDateInputs();
-      updateSearchBarLabels();
-      track('booking_dates_selected', { start: isoDate(state.checkin), end: isoDate(state.checkout) });
-      validateDates();
-      renderCalendar();
-      // After picking departure, close calendar after a brief moment.
-      setTimeout(() => {
-        closeAllPops();
-        setActiveSegment(null);
-      }, 250);
+      commitDeparture(date);
       return;
     }
   }
@@ -677,7 +626,16 @@ function showAltBanner(alts){
   const banner = document.getElementById('altBanner');
   const grid = document.getElementById('altGrid');
   grid.innerHTML = '';
-  const options = [alts && alts.closest_exact_match, alts && alts.closest_shorter_match].filter(Boolean);
+  const today = stripTime(new Date());
+  // Drop any alternative whose start date is already in the past — the
+  // user cannot book a stay starting before today, regardless of what
+  // the API returned.
+  const options = [alts && alts.closest_exact_match, alts && alts.closest_shorter_match]
+    .filter(Boolean)
+    .filter(opt => {
+      const startD = parseISODate(opt.start_date);
+      return startD >= today;
+    });
   if (!options.length){ banner.classList.remove('show'); return; }
 
   options.forEach(opt => {
@@ -774,9 +732,28 @@ function lineLabel(line){
 /* Ensure the selected car shows up in the summary even if the API
  * doesn't return a 'car' line. We compute price_per_day × nights from
  * the cars list and append/repair the line + totals locally.
+ *
+ * If no car is selected, strip any stale 'car' line locally so the
+ * summary updates instantly on deselect, and lower totals to match.
+ * The next /calculate-price response will overwrite either way.
  */
 function reconcileCarLine(){
-  if (!state.carId || !state.checkin || !state.checkout) return;
+  if (!state.carId){
+    if (Array.isArray(state.priceLines)){
+      const removed = state.priceLines.find(l => l.type === 'car');
+      state.priceLines = state.priceLines.filter(l => l.type !== 'car');
+      if (removed && state.totals){
+        const amt = Number(removed.subtotal_excl_tax || removed.amount_excl_tax || 0);
+        const subPrev = Number(state.totals.subtotal_excl_tax || 0);
+        const sub = Math.max(0, subPrev - amt);
+        const taxRate = subPrev > 0 ? Number(state.totals.tax_total || 0) / subPrev : 0;
+        const tax = Math.max(0, Number(state.totals.tax_total || 0) - amt * taxRate);
+        state.totals = { ...state.totals, subtotal_excl_tax: sub, tax_total: tax, total_incl_tax: sub + tax };
+      }
+    }
+    return;
+  }
+  if (!state.checkin || !state.checkout) return;
   const car = (state.cars || []).find(c => Number(c.id) === Number(state.carId));
   if (!car || car.price_per_day == null) return;
 
@@ -869,22 +846,38 @@ function renderSummary(){
 
 /* ==========================================================
    CAR GRID — real photos
+   Priority: 1) image_url from the API (specific to this car)
+             2) keyword-matched stock photo (sedan / SUV / etc.)
+             3) index-based fallback so all 4 cards stay distinct
    ========================================================== */
 const CAR_IMAGES = [
-  // Index-based fallback. Distinct photos for the 4 cars.
+  // Distinct REAL car photos for the index-based fallback.
   'https://images.unsplash.com/photo-1494976388531-d1058494cdd8?auto=format&fit=crop&w=800&q=80', // hatchback
   'https://images.unsplash.com/photo-1503376780353-7e6692767b70?auto=format&fit=crop&w=800&q=80', // sedan
   'https://images.unsplash.com/photo-1568844293986-8d0400bd4745?auto=format&fit=crop&w=800&q=80', // SUV
   'https://images.unsplash.com/photo-1606664515524-ed2f786a0bd6?auto=format&fit=crop&w=800&q=80', // convertible
 ];
 
+const NOCAR_ICON = `
+  <svg class="nocar-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round">
+    <circle cx="12" cy="12" r="10"></circle>
+    <line x1="4.93" y1="4.93" x2="19.07" y2="19.07"></line>
+  </svg>
+`;
+
 function carImageFor(car, index){
+  // 1) Use whatever the API returned for this specific car.
+  const fromApi = car.image_url || car.photo_url || car.image || car.photo || car.thumbnail;
+  if (fromApi) return fromApi;
+
+  // 2) Keyword match against the title — common Curaçao rentals included.
   const t = (car.title || '').toLowerCase();
-  // Match by keywords so a real category gets a sensible photo.
-  if (/\b(jeep|suv|wrangler|rav|x-?trail|patrol|land\s?cruiser|landcruiser)\b/.test(t)) return CAR_IMAGES[2];
-  if (/\b(convertible|cabrio|spider|roadster|mustang)\b/.test(t)) return CAR_IMAGES[3];
-  if (/\b(sedan|corolla|civic|accent|elantra|altima|camry)\b/.test(t)) return CAR_IMAGES[1];
-  if (/\b(compact|hatch|hatchback|picanto|aygo|panda|i10|up)\b/.test(t)) return CAR_IMAGES[0];
+  if (/\b(jeep|suv|wrangler|rav|x-?trail|patrol|land\s?cruiser|landcruiser|jimny|duster|vitara|terios)\b/.test(t)) return CAR_IMAGES[2];
+  if (/\b(convertible|cabrio|spider|roadster|mustang|miata|sport)\b/.test(t)) return CAR_IMAGES[3];
+  if (/\b(sedan|corolla|civic|accent|elantra|altima|camry|swift\s?dzire|city|cerato)\b/.test(t)) return CAR_IMAGES[1];
+  if (/\b(compact|hatch|hatchback|picanto|aygo|panda|i10|i20|up|swift|alto|celerio|yaris|fit)\b/.test(t)) return CAR_IMAGES[0];
+
+  // 3) Index fallback so each of the 4 cards still shows a different photo.
   return CAR_IMAGES[index % CAR_IMAGES.length];
 }
 
@@ -909,7 +902,7 @@ function carCard(c, index){
   const imgUrl = c.nocar ? '' : carImageFor(c, index);
   card.innerHTML = `
     <div class="car-img">
-      ${c.nocar ? '' : `<img src="${imgUrl}" alt="${c.title || ''}" loading="lazy" />`}
+      ${c.nocar ? NOCAR_ICON : `<img src="${imgUrl}" alt="${c.title || ''}" loading="lazy" />`}
     </div>
     <div class="car-name">${c.title}</div>
     <div class="car-price">${priceTxt}</div>
@@ -918,11 +911,15 @@ function carCard(c, index){
     </div>
   `;
   card.addEventListener('click', () => {
-    state.carId = c.id;
+    // Toggle: clicking the selected car deselects it (falls back to id 0,
+    // i.e. the "no car" tile). Clicking "no car" always commits to no car.
+    if (c.nocar){
+      state.carId = 0;
+    } else {
+      state.carId = (state.carId === c.id) ? 0 : c.id;
+    }
     updateCarGrid(state.cars);
     refreshPrice();
-    // Reflect the chosen car immediately in the summary even before the
-    // price API responds — uses cars API price_per_day × nights.
     renderSummary();
   });
   return card;
@@ -969,6 +966,12 @@ async function submitBooking(){
   });
   if (c.email && !/.+@.+\..+/.test(c.email)){
     document.getElementById('email').closest('.field').classList.add('error');
+    valid = false;
+  }
+  // Phone must have between PHONE_MIN and PHONE_MAX digits.
+  const phoneDigits = phoneLocal.replace(/\D/g, '');
+  if (phoneDigits.length < PHONE_MIN || phoneDigits.length > PHONE_MAX){
+    document.getElementById('phone').closest('.field').classList.add('error');
     valid = false;
   }
   if (!agree){ showToast(t('err_form_incomplete'), true); return; }
@@ -1087,6 +1090,40 @@ function closeAllPops(){
     const el = document.getElementById(id);
     if (el) el.classList.remove('open');
   });
+  restoreInlineCalendar();
+}
+
+/* When the calendar has been moved inside the panel (via "Edit" on the
+ * stay-summary), put it back where it belongs and strip the inline class. */
+function restoreInlineCalendar(){
+  const pop = document.getElementById('popCal');
+  if (!pop || !pop.classList.contains('pop-cal--inline')) return;
+  pop.classList.remove('pop-cal--inline');
+  const wrap = document.querySelector('.search-wrap');
+  if (wrap) wrap.appendChild(pop);
+}
+
+/* Open the calendar INSIDE the panel (anchored under the stay-summary)
+ * so the user can edit dates without losing their booking-flow context. */
+async function openCalendarInPanel(mode){
+  const pop = document.getElementById('popCal');
+  const host = document.getElementById('inlineCalHost');
+  if (!pop || !host) return;
+  host.appendChild(pop);
+  pop.classList.add('pop-cal--inline');
+  pop.classList.add('open');
+
+  cal.pickingMode = mode;
+  const today = stripTime(new Date());
+  const firstOfThisMonth = new Date(today.getFullYear(), today.getMonth(), 1);
+  const anchor = state.checkin || cal.view || today;
+  cal.view = new Date(anchor.getFullYear(), anchor.getMonth(), 1);
+  if (cal.view < firstOfThisMonth) cal.view = firstOfThisMonth;
+  cal.draft.start = state.checkin;
+  cal.draft.end = state.checkout;
+  renderCalendar();
+  await ensureAvailabilityLoaded(cal.view);
+  pop.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
 }
 
 function updateSearchBarLabels(){
@@ -1117,6 +1154,127 @@ function updateSearchBarLabels(){
   bEl.textContent = `${state.bedrooms} ${bWord}`;
 }
 
+/* ==========================================================
+   CUSTOM DROPDOWN  (Guests / Children / Bedrooms in the panel)
+   Replaces the native <select> with a styled menu that matches
+   the input's border-radius and supports a "custom number" row.
+   The original <select> stays in the DOM (hidden) so existing
+   reads (.value) and change handlers keep working unchanged.
+   ========================================================== */
+function attachCustomDropdown(selectEl, opts = {}){
+  const { allowCustom = true, customMin = 1, customMax = 99, customPlaceholder = 'Custom', goLabel = 'OK', wrapClass = '' } = opts;
+
+  const field = selectEl.closest('.field') || selectEl.parentNode;
+  selectEl.style.display = 'none';
+
+  const wrap = document.createElement('div');
+  wrap.className = 'cdd' + (wrapClass ? ' ' + wrapClass : '');
+
+  const trigger = document.createElement('button');
+  trigger.type = 'button';
+  trigger.className = 'cdd-trigger';
+  trigger.innerHTML = `
+    <span class="cdd-value"></span>
+    <svg class="cdd-arrow" viewBox="0 0 14 8" fill="none">
+      <path stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" d="M1 1l6 6 6-6"/>
+    </svg>
+  `;
+
+  const menu = document.createElement('div');
+  menu.className = 'cdd-menu';
+  const list = document.createElement('div');
+  list.className = 'cdd-list';
+  menu.appendChild(list);
+
+  let customRow = null;
+  if (allowCustom){
+    customRow = document.createElement('div');
+    customRow.className = 'cdd-custom';
+    customRow.innerHTML = `
+      <input type="number" inputmode="numeric" min="${customMin}" max="${customMax}" placeholder="${customPlaceholder}" />
+      <button type="button" class="cdd-custom-go">${goLabel}</button>
+    `;
+    menu.appendChild(customRow);
+
+    const input = customRow.querySelector('input');
+    const go    = customRow.querySelector('.cdd-custom-go');
+    const submit = () => {
+      const raw = parseInt(input.value, 10);
+      if (isNaN(raw)) return;
+      const n = Math.max(customMin, Math.min(customMax, raw));
+      setValue(String(n));
+      input.value = '';
+      close();
+    };
+    go.addEventListener('click', submit);
+    input.addEventListener('keydown', (e) => {
+      if (e.key === 'Enter'){ e.preventDefault(); submit(); }
+    });
+    input.addEventListener('click', (e) => e.stopPropagation());
+  }
+
+  function renderList(){
+    list.innerHTML = '';
+    Array.from(selectEl.options).forEach(opt => {
+      if (opt.hidden || opt.disabled) return;
+      const li = document.createElement('div');
+      li.className = 'cdd-item';
+      li.textContent = opt.textContent;
+      if (opt.value === selectEl.value) li.classList.add('selected');
+      li.addEventListener('click', () => {
+        setValue(opt.value);
+        close();
+      });
+      list.appendChild(li);
+    });
+  }
+
+  function setValue(v){
+    // If the value isn't already an option, append it (covers custom entries)
+    if (![...selectEl.options].some(o => o.value === String(v))){
+      const newOpt = document.createElement('option');
+      newOpt.value = String(v);
+      newOpt.textContent = String(v);
+      newOpt.dataset.custom = '1';
+      selectEl.appendChild(newOpt);
+    }
+    selectEl.value = String(v);
+    selectEl.dispatchEvent(new Event('change', { bubbles: true }));
+    syncDisplay();
+  }
+
+  function syncDisplay(){
+    const opt = selectEl.options[selectEl.selectedIndex];
+    trigger.querySelector('.cdd-value').textContent = opt ? opt.textContent : '';
+  }
+
+  function open(){
+    renderList();
+    wrap.classList.add('open');
+  }
+  function close(){ wrap.classList.remove('open'); }
+  function toggle(){ wrap.classList.contains('open') ? close() : open(); }
+
+  trigger.addEventListener('click', (e) => { e.stopPropagation(); toggle(); });
+  document.addEventListener('click', (e) => {
+    if (!wrap.contains(e.target)) close();
+  });
+
+  wrap.appendChild(trigger);
+  wrap.appendChild(menu);
+  // Insert the wrap right BEFORE the now-hidden select so the floating
+  // .field label still anchors visually above our trigger.
+  selectEl.parentNode.insertBefore(wrap, selectEl);
+
+  syncDisplay();
+
+  // Expose for programmatic refresh (e.g. when value is set elsewhere).
+  selectEl.__cddSync = syncDisplay;
+  selectEl.__cddRefresh = renderList;
+
+  return { syncDisplay, refresh: renderList };
+}
+
 function updateStepperButtons(){
   const minB = minBedroomsFor(state.guests);
   const guestsMin = 1, guestsMax = 8;
@@ -1142,21 +1300,27 @@ function bumpStepper(which, dir){
     if (v === state.guests) return;
     state.guests = v;
     document.getElementById('stepGuests').textContent = v;
-    document.getElementById('guestsSel').value = String(v);
+    const sel = document.getElementById('guestsSel');
+    sel.value = String(v);
+    if (sel.__cddSync) sel.__cddSync();
     updateBedroomOptions();
   } else if (which === 'children'){
     const v = Math.min(3, Math.max(0, state.children + dir));
     if (v === state.children) return;
     state.children = v;
     document.getElementById('stepChildren').textContent = v;
-    document.getElementById('childrenSel').value = String(v);
+    const sel = document.getElementById('childrenSel');
+    sel.value = String(v);
+    if (sel.__cddSync) sel.__cddSync();
   } else if (which === 'bedrooms'){
     const minB = minBedroomsFor(state.guests);
     const v = Math.min(4, Math.max(minB, state.bedrooms + dir));
     if (v === state.bedrooms) return;
     state.bedrooms = v;
     document.getElementById('stepBedrooms').textContent = v;
-    document.getElementById('bedroomsSel').value = String(v);
+    const sel = document.getElementById('bedroomsSel');
+    sel.value = String(v);
+    if (sel.__cddSync) sel.__cddSync();
   }
   updateSearchBarLabels();
   updateStepperButtons();
@@ -1336,10 +1500,38 @@ document.addEventListener('DOMContentLoaded', () => {
   });
 
   // ---- PANEL Step-1 ----
-  // Edit dates: close the panel, scroll to bar, focus arrival
-  document.getElementById('editDates').addEventListener('click', () => {
-    closePanel();
-    setTimeout(() => openCalendarFor('arrival'), 350);
+  // Click an Arrival/Departure tile: toggles the inline calendar.
+  //  - Same tile clicked again → close.
+  //  - Other tile clicked while open → switch picking mode (don't reopen).
+  //  - Otherwise → open the calendar in that mode.
+  // stopPropagation prevents the global "click outside .search-pop closes
+  // the popover" handler from firing on the same click and undoing us.
+  function toggleInlineCalendar(mode){
+    const pop = document.getElementById('popCal');
+    const isOpenInline = pop.classList.contains('open') && pop.classList.contains('pop-cal--inline');
+    if (isOpenInline && cal.pickingMode === mode){
+      closeAllPops();
+      return;
+    }
+    if (isOpenInline){
+      cal.pickingMode = mode;
+      renderCalendar();
+      return;
+    }
+    openCalendarInPanel(mode);
+  }
+  document.querySelectorAll('.stay-summary [data-edit-mode]').forEach(el => {
+    el.addEventListener('click', (e) => {
+      e.stopPropagation();
+      toggleInlineCalendar(el.dataset.editMode);
+    });
+    el.addEventListener('keydown', (e) => {
+      if (e.key === 'Enter' || e.key === ' '){
+        e.preventDefault();
+        e.stopPropagation();
+        toggleInlineCalendar(el.dataset.editMode);
+      }
+    });
   });
 
   document.getElementById('guestsSel').addEventListener('change', e => {
@@ -1397,10 +1589,51 @@ document.addEventListener('DOMContentLoaded', () => {
     document.getElementById('summaryToggle').setAttribute('aria-expanded', open);
   });
 
+  // Custom dropdowns for the panel selects (Guests / Children / Bedrooms).
+  // Attach BEFORE updateBedroomOptions() so __cddSync exists when called.
+  attachCustomDropdown(document.getElementById('guestsSel'),  { customMin: 1, customMax: 20, customPlaceholder: lang === 'nl' ? 'Aangepast' : 'Custom', goLabel: lang === 'nl' ? 'OK' : 'OK' });
+  attachCustomDropdown(document.getElementById('childrenSel'),{ customMin: 0, customMax: 10, customPlaceholder: lang === 'nl' ? 'Aangepast' : 'Custom' });
+  attachCustomDropdown(document.getElementById('bedroomsSel'),{ customMin: 1, customMax: 20, customPlaceholder: lang === 'nl' ? 'Aangepast' : 'Custom' });
+  attachCustomDropdown(document.getElementById('transferSel'), { customMin: 0, customMax: 20, customPlaceholder: lang === 'nl' ? 'Aangepast' : 'Custom' });
+  attachCustomDropdown(document.getElementById('country'),     { allowCustom: false });
+  attachCustomDropdown(document.getElementById('phoneCountry'),{ allowCustom: false, wrapClass: 'cdd-phone' });
+
   // Init
   updateBedroomOptions();
   applyI18n();
   updateSearchBarLabels();
   renderCalendarWeekdays();
+  // Phone digit limit (depends on selected dial-code)
+  initPhoneLimit();
   track('booking_opened', { lang });
 });
+
+/* ==========================================================
+   PHONE — global digit limits (min 9, max 11)
+   Cap typing at PHONE_MAX as the user types; min length is
+   enforced on submit. Non-digit characters are stripped.
+   ========================================================== */
+const PHONE_MIN = 9;
+const PHONE_MAX = 11;
+
+function applyPhoneLimit(){
+  const phone = document.getElementById('phone');
+  if (!phone) return;
+  phone.dataset.maxDigits = String(PHONE_MAX);
+  phone.dataset.minDigits = String(PHONE_MIN);
+  // Trim if anything is over the cap.
+  const digits = phone.value.replace(/\D/g, '').slice(0, PHONE_MAX);
+  phone.value = digits;
+}
+function onPhoneInput(e){
+  const digits = e.target.value.replace(/\D/g, '').slice(0, PHONE_MAX);
+  e.target.value = digits;
+}
+function initPhoneLimit(){
+  const country = document.getElementById('phoneCountry');
+  const phone   = document.getElementById('phone');
+  if (!country || !phone) return;
+  applyPhoneLimit();
+  country.addEventListener('change', applyPhoneLimit);
+  phone.addEventListener('input', onPhoneInput);
+}

@@ -1,4 +1,4 @@
-:root{
+ :root{
   --yellow: #FFE500;
   --yellow-deep: #F5D800;
   --ink: #0B1226;            /* headings / primary text */
@@ -27,8 +27,8 @@
   --font-ui: 'Outfit', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
 
   --step-transition: .45s cubic-bezier(.22,.61,.36,1);
-  --panel-width: 40vw;
-  --panel-min:   480px;
+  --panel-width: 488px;
+  --panel-min:   0;
 }
 
 /* ============================================================
@@ -56,40 +56,26 @@ input, select, textarea{ font-family: inherit; color: inherit; }
   display: flex;
   flex-direction: column;
   overflow: hidden;
-}
-.landing-bg{
-  position: absolute;
-  inset: 0;
-  background:
-    linear-gradient(180deg, rgba(11,18,38,.45) 0%, rgba(11,18,38,.25) 45%, rgba(11,18,38,.6) 100%),
-    url('https://images.unsplash.com/photo-1507525428034-b723cf961d3e?auto=format&fit=crop&w=2000&q=80') center/cover no-repeat;
-  z-index: 0;
+  background: #EEF0F4;
 }
 .landing-top{
   position: relative;
   z-index: 2;
   display: flex;
   align-items: center;
-  justify-content: space-between;
+  justify-content: flex-end;
   padding: 24px clamp(20px, 4vw, 56px);
-  color: #fff;
+  color: var(--ink);
 }
-.brand{
-  font-family: var(--font-display);
-  font-size: clamp(20px, 2.4vw, 26px);
-  letter-spacing: .02em;
-}
-.brand span{ color: var(--yellow); }
 
 .landing-lang{
   position: static !important;
-  background: rgba(255,255,255,.18) !important;
-  backdrop-filter: blur(8px);
+  background: var(--bg-soft) !important;
 }
-.landing-lang button{ color: #fff !important; }
+.landing-lang button{ color: var(--muted); }
 .landing-lang button.active{
-  background: var(--yellow) !important;
-  color: var(--ink) !important;
+  background: var(--ink) !important;
+  color: #fff !important;
 }
 
 .landing-inner{
@@ -351,7 +337,7 @@ input, select, textarea{ font-family: inherit; color: inherit; }
   opacity: 0;
   pointer-events: none;
   transition: opacity .35s;
-  z-index: 998;
+  z-index: 2147483646;
 }
 .panel-overlay.open{ opacity: 1; pointer-events: auto; }
 
@@ -363,7 +349,7 @@ input, select, textarea{ font-family: inherit; color: inherit; }
   width: var(--panel-width);
   min-width: var(--panel-min);
   background: #fff;
-  z-index: 999;
+  z-index: 2147483647;
   box-shadow: -10px 0 40px rgba(11,18,38,.22);
   transform: translateX(100%);
   transition: transform .42s cubic-bezier(.22,.61,.36,1);
@@ -372,11 +358,8 @@ input, select, textarea{ font-family: inherit; color: inherit; }
   flex-direction: column;
 }
 .panel.open{ transform: translateX(0); }
-@media (max-width: 1180px){
-  :root{ --panel-width: 55vw; }
-}
-@media (max-width: 900px){
-  :root{ --panel-width: 100vw; --panel-min: 0; }
+@media (max-width: 1024px){
+  :root{ --panel-width: 100vw; }
   .panel{ box-shadow: none; }
 }
 
@@ -522,7 +505,18 @@ input, select, textarea{ font-family: inherit; color: inherit; }
   margin-bottom: 16px;
   gap: 10px;
 }
-.stay-summary-block{ flex: 1; min-width: 0; }
+.stay-summary-block{
+  flex: 1;
+  min-width: 0;
+  cursor: pointer;
+  padding: 4px 10px;
+  border-radius: 10px;
+  transition: background .15s, transform .12s;
+  outline: none;
+}
+.stay-summary-block:hover,
+.stay-summary-block:focus-visible{ background: rgba(255,255,255,.55); }
+.stay-summary-block:active{ transform: scale(.98); }
 .stay-summary-label{
   font-size: 11px;
   font-weight: 700;
@@ -540,14 +534,6 @@ input, select, textarea{ font-family: inherit; color: inherit; }
   width: 1px;
   height: 30px;
   background: rgba(245,216,0,.7);
-}
-.stay-summary-edit{
-  font-size: 13px;
-  font-weight: 700;
-  color: var(--ink);
-  text-decoration: underline;
-  text-underline-offset: 3px;
-  padding: 6px 10px;
 }
 
 /* ============================================================
@@ -610,21 +596,25 @@ input, select, textarea{ font-family: inherit; color: inherit; }
 }
 .field-hint.error-hint{ color: var(--error); }
 
-/* Phone with country dial-code */
+/* Phone with country dial-code (25% / 75% split, height matches
+   the other input fields like First name / City). */
 .phone-field .phone-row{
   display: flex;
   align-items: stretch;
   gap: 0;
-  padding-top: 22px;
+  padding-top: 0;     /* the country/input themselves carry the 28px top */
+  width: 100%;
 }
 .phone-country{
-  width: auto;
-  min-width: 92px;
+  flex: 0 0 25%;
+  width: 25%;
+  min-width: 0;
   border: none;
   outline: none;
   background: transparent;
-  padding: 6px 28px 12px 16px;
-  font-size: 15px;
+  /* Same vertical padding as .field input/select to match field heights. */
+  padding: 28px 22px 12px 14px;
+  font-size: 14px;
   font-weight: 600;
   color: var(--ink);
   appearance: none;
@@ -632,11 +622,17 @@ input, select, textarea{ font-family: inherit; color: inherit; }
   cursor: pointer;
   background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='10' height='6' viewBox='0 0 14 8'><path fill='none' stroke='%230B1226' stroke-width='2' stroke-linecap='round' stroke-linejoin='round' d='M1 1l6 6 6-6'/></svg>");
   background-repeat: no-repeat;
-  background-position: right 8px center;
+  background-position: right 6px center;
   border-right: 1px solid var(--line);
+  text-overflow: ellipsis;
+  overflow: hidden;
+  white-space: nowrap;
 }
 .phone-field input#phone{
-  padding: 6px 16px 12px;
+  flex: 1 1 75%;
+  width: 75%;
+  min-width: 0;
+  padding: 28px 16px 12px;
   font-size: 15px;
   font-weight: 500;
 }
@@ -754,7 +750,7 @@ input, select, textarea{ font-family: inherit; color: inherit; }
   border-top: 1px solid var(--line);
   position: sticky;
   bottom: 0;
-  z-index: 20;
+  z-index: 1000;
   box-shadow: 0 -8px 24px rgba(11,18,38,.06);
 }
 .summary-head{
@@ -815,26 +811,53 @@ input, select, textarea{ font-family: inherit; color: inherit; }
   line-height: 1.55;
 }
 
-/* Collapsed-by-default summary toggle */
+/* Collapsed-by-default summary toggle.
+   Layout: title left, total CENTERED (absolutely), chevron absolute on the
+   right (positioned in % so it stays clear of any floating WhatsApp button
+   pinned to the bottom-right of the page). */
 .summary-toggle{
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
+  display: block;
   width: 100%;
-  padding: 4px 0 8px;
+  padding: 8px 0;
   font-weight: 600;
   font-size: 14px;
   color: var(--ink);
+  position: relative;
+  z-index: 2;
+  min-height: 32px;
+  text-align: left;
+}
+.summary-toggle .summary-toggle-label{
+  display: inline-block;
+  vertical-align: middle;
+  line-height: 32px;
+  font-size: 22px;
 }
 .summary-toggle .total-preview{
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  transform: translate(-50%, -50%);
   font-family: var(--font-display);
   font-size: 18px;
   font-weight: 400;
+  white-space: nowrap;
 }
 .summary-body{ display: none; padding-top: 12px; margin-top: 8px; border-top: 1px solid var(--line); }
 .aside.open .summary-body{ display: block; }
-.aside.open .summary-toggle .chevron{ transform: rotate(180deg); }
-.summary-toggle .chevron{ transition: transform .2s; }
+/* Chevron — pinned 5% from the right edge of the toggle. */
+.summary-toggle .chevron{
+  position: absolute;
+  right: 5%;
+  top: 50%;
+  width: 14px;
+  height: 8px;
+  transform: translateY(-50%);
+  transition: transform .2s;
+}
+.aside.open .summary-toggle .chevron{
+  transform: translateY(-50%) rotate(180deg);
+}
 
 /* ============================================================
    STEPS — transitions
@@ -1048,28 +1071,35 @@ input, select, textarea{ font-family: inherit; color: inherit; }
 .car-img{
   width: 100%;
   aspect-ratio: 4/3;
-  background: #F4F6FA center/cover no-repeat;
+  background: #F4F6FA;
   border-radius: 10px;
   display: grid;
   place-items: center;
   overflow: hidden;
   position: relative;
+  padding: 8px;
 }
+/* contain (not cover) so the whole car is visible — cover was cropping
+   landscape stock photos so only half the car showed. */
 .car-img img{
   width: 100%;
   height: 100%;
-  object-fit: cover;
+  object-fit: contain;
   display: block;
 }
 .car-card.nocar .car-img{
   background: repeating-linear-gradient(45deg, #F4F6FA, #F4F6FA 10px, #ECEFF4 10px, #ECEFF4 20px);
 }
-.car-card.nocar .car-img::after{
-  content: "—";
-  font-size: 32px;
+.car-card.nocar .car-img .nocar-icon{
+  width: 44%;
+  height: 44%;
   color: var(--muted);
-  font-weight: 700;
-  position: absolute;
+  opacity: .85;
+}
+.car-img svg.car-art{
+  width: 100%;
+  height: 100%;
+  display: block;
 }
 .car-name{
   font-weight: 600;
@@ -1119,6 +1149,7 @@ input, select, textarea{ font-family: inherit; color: inherit; }
   border-radius: var(--radius-md);
   background: #FFF7CC;
   border: 1px solid rgba(245,216,0,.6);
+  text-align: left;
 }
 .alt-banner.show{ display: block; animation: stepIn .3s; }
 .alt-banner h4{
@@ -1258,3 +1289,165 @@ body.panel-open{ overflow: hidden; }
 .mt-16{ margin-top: 16px; }
 .mt-24{ margin-top: 24px; }
 .mb-16{ margin-bottom: 16px; }
+
+/* ============================================================
+   CUSTOM DROPDOWN (Guests / Children / Bedrooms inside the panel)
+   Replaces native <select> so the open menu can match the input's
+   border-radius and host a "custom number" entry row.
+   ============================================================ */
+.cdd{
+  position: relative;
+  width: 100%;
+}
+.cdd-trigger{
+  width: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 28px 16px 12px;
+  font-size: 15px;
+  font-weight: 500;
+  color: var(--ink);
+  background: transparent;
+  border: none;
+  border-radius: var(--radius-md);
+  cursor: pointer;
+  text-align: left;
+  font-family: inherit;
+}
+.cdd-trigger .cdd-arrow{
+  width: 14px;
+  height: 8px;
+  flex-shrink: 0;
+  transition: transform .2s;
+}
+.cdd.open .cdd-trigger .cdd-arrow{ transform: rotate(180deg); }
+.cdd-menu{
+  position: absolute;
+  top: calc(100% + 6px);
+  left: 0;
+  right: 0;
+  background: #fff;
+  border: 1.5px solid var(--line);
+  border-radius: var(--radius-md);
+  box-shadow: var(--shadow-pop);
+  z-index: 1100;
+  display: none;
+  overflow: hidden;
+}
+.cdd.open .cdd-menu{ display: block; animation: popOpen .18s ease-out; }
+.cdd-list{
+  max-height: 240px;
+  overflow-y: auto;
+}
+.cdd-item{
+  padding: 10px 16px;
+  font-size: 15px;
+  font-weight: 500;
+  color: var(--ink);
+  cursor: pointer;
+  transition: background .12s;
+}
+.cdd-item:hover{ background: var(--bg-soft); }
+.cdd-item.selected{
+  background: rgba(255,229,0,.18);
+  font-weight: 600;
+}
+.cdd-custom{
+  display: flex;
+  gap: 0;
+  border-top: 1px solid var(--line);
+  padding: 10px 12px;
+  background: var(--bg-soft);
+  border-radius: 0 0 var(--radius-md) var(--radius-md);
+}
+.cdd-custom input{
+  flex: 1;
+  border: 1.5px solid var(--line);
+  border-right: none;
+  border-radius: 8px 0 0 8px;
+  padding: 8px 12px;
+  font-size: 14px;
+  outline: none;
+  background: #fff;
+  color: var(--ink);
+  min-width: 0;
+}
+.cdd-custom input:focus{ border-color: var(--ink); }
+
+/* Phone dial-code variant — sits in the 25% slot of .phone-row,
+   matches the typography/padding of the previous native select. */
+.phone-row .cdd.cdd-phone{
+  flex: 0 0 25%;
+  width: 25%;
+  min-width: 0;
+  border-right: 1px solid var(--line);
+}
+.cdd.cdd-phone .cdd-trigger{
+  padding: 28px 22px 12px 14px;
+  font-size: 14px;
+  font-weight: 600;
+  gap: 6px;
+}
+.cdd.cdd-phone .cdd-arrow{ width: 10px; height: 6px; }
+.cdd-custom .cdd-custom-go{
+  padding: 8px 14px;
+  background: var(--ink);
+  color: #fff;
+  border-radius: 0 8px 8px 0;
+  font-weight: 600;
+  font-size: 13px;
+  border: none;
+  cursor: pointer;
+}
+.cdd-custom .cdd-custom-go:hover{ background: #1a2240; }
+
+/* ============================================================
+   INLINE CALENDAR HOST (when "Edit" on stay-summary is clicked
+   we move the popCal into the panel instead of redirecting back
+   to the homepage search bar.)
+   ============================================================ */
+.inline-cal-host{
+  margin-top: 12px;
+}
+.search-pop.pop-cal--inline{
+  position: relative;
+  left: 0;
+  right: 0;
+  top: auto;
+  transform: none;
+  width: 100%;
+  margin: 0;
+  padding: 6px;
+  z-index: auto;
+  border: 1.5px solid var(--line);
+  box-shadow: var(--shadow-soft);
+}
+/* Inside the narrower 488px panel, keep the calendar to ONE month and
+   leave the prev/next nav buttons fully visible so the user can switch
+   months without seeing two side-by-side. */
+.search-pop.pop-cal--inline #calMonth2{ display: none; }
+.search-pop.pop-cal--inline .cal-months-header{ grid-template-columns: 1fr; }
+.search-pop.pop-cal--inline .cal-panels{ grid-template-columns: 1fr; gap: 0; }
+.search-pop.pop-cal--inline .cal-panels .cal-month-panel:nth-child(2){ display: none; }
+
+/* Mobile booking panel — inline calendar overrides for the full-width
+   panel. Drops the max-height/overflow inherited from the popover mobile
+   rule (avoids a nested scroll inside the already-scrollable panel) and
+   tightens the day-cell sizing so all 7 days fit cleanly across. */
+@media (max-width: 720px){
+  .search-pop.pop-cal--inline{
+    max-height: none;
+    overflow: visible;
+    padding: 4px;
+    width: 100%;
+  }
+  .search-pop.pop-cal--inline .calendar{ padding: 12px 4px 10px; }
+  .search-pop.pop-cal--inline .cal-day{ font-size: 13px; border-radius: 8px; }
+  .search-pop.pop-cal--inline .cal-days,
+  .search-pop.pop-cal--inline .cal-weekdays{ gap: 2px; }
+  .search-pop.pop-cal--inline .cal-nav-btn{ width: 32px; height: 32px; }
+  .search-pop.pop-cal--inline .cal-month{ font-size: 14px; }
+  .search-pop.pop-cal--inline .cal-sub{ font-size: 12px; }
+}
