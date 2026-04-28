@@ -570,10 +570,28 @@ input, select, textarea{ font-family: inherit; color: inherit; }
   background: #fff;
 }
 .field:focus-within{
-  border-color: var(--ink);
-  box-shadow: 0 0 0 4px rgba(11,18,38,.06);
+  /* No visual change on focus — the autofill popup arrow that some
+     browsers draw against a darker focus border was being read as a
+     broken/missing-corner border. Keep the resting border. */
+  border-color: var(--line);
 }
 .field.error{ border-color: var(--error); }
+
+/* Keep autofilled inputs visually identical to normal inputs so the
+   field's rounded border isn't interrupted by the browser's yellow/blue
+   autofill background. */
+.field input:-webkit-autofill,
+.field input:-webkit-autofill:hover,
+.field input:-webkit-autofill:focus,
+.field input:-webkit-autofill:active,
+.field textarea:-webkit-autofill,
+.field select:-webkit-autofill{
+  -webkit-text-fill-color: var(--ink);
+  -webkit-box-shadow: 0 0 0 1000px #fff inset;
+  box-shadow: 0 0 0 1000px #fff inset;
+  caret-color: var(--ink);
+  transition: background-color 9999s ease-out 0s;
+}
 .field label{
   position: absolute;
   top: 10px;
@@ -1014,7 +1032,10 @@ input, select, textarea{ font-family: inherit; color: inherit; }
   color: var(--muted);
 }
 .cal-day.available.no-min-stay:hover{ background: #ECEFF4; }
-.cal-day.in-range{
+.cal-day.in-range,
+.cal-day.available.in-range,
+.cal-day.available.no-min-stay.in-range,
+.cal-day.unavailable.in-range{
   background: #FFF7B8;
   color: var(--ink);
   border-radius: 0;

@@ -1,0 +1,10 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(node --check \"C:/Users/W10/Downloads/villa-paulina-booking/script.js\")",
+      "Bash(curl -sL -w \"\\\\n---HTTP_STATUS:%{http_code}---\\\\nSIZE:%{size_download}\\\\n\" \"https://sentive.nl/api/public/docs/\" -o \"C:/Users/W10/AppData/Local/Temp/sentive_docs.html\")",
+      "Read(//c/Users/W10/AppData/Local/Temp/**)",
+      "Bash(curl -sL -w \"\\\\n---HTTP_STATUS:%{http_code}---\\\\nSIZE:%{size_download}\\\\n\" \"https://sentive.nl/api/public/docs/openapi.yaml\" -o \"C:/Users/W10/AppData/Local/Temp/sentive_openapi.yaml\")"
+    ]
+  }
+}

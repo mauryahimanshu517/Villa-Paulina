@@ -402,6 +402,8 @@ function renderMonthPanel(viewDate, monthLabelId, daysGridId){
 
     if (date < today){
       el.classList.add('past');
+      el.title = t('err_unavailable');
+      el.addEventListener('click', () => showToast(t('err_unavailable'), true));
     } else {
       const avail = state.availabilityByDate.get(iso);
       const pickingArrival = cal.pickingMode === 'arrival' || !cal.draft.start || (cal.draft.start && cal.draft.end);
@@ -415,6 +417,8 @@ function renderMonthPanel(viewDate, monthLabelId, daysGridId){
         el.addEventListener('click', () => selectDay(date));
       } else {
         el.classList.add('unavailable');
+        el.title = t('err_unavailable');
+        el.addEventListener('click', () => showToast(t('err_unavailable'), true));
       }
     }
 
@@ -459,6 +463,19 @@ function renderCalendar(){
     const n = daysBetween(cal.draft.start, cal.draft.end);
     sel.innerHTML = `<strong>${formatDate(cal.draft.start)}</strong> → <strong>${formatDate(cal.draft.end)}</strong> · ${n} ${t('cal_nights')}`;
   }
+}
+
+// Returns true only if every night from `start` (inclusive) up to but not
+// including `end` is marked available. Departure day itself is the
+// check-out and doesn't need to be available.
+function rangeFullyAvailable(start, end){
+  const cur = new Date(start.getFullYear(), start.getMonth(), start.getDate());
+  while (cur < end){
+    const a = state.availabilityByDate.get(isoDate(cur));
+    if (!a || !a.available) return false;
+    cur.setDate(cur.getDate() + 1);
+  }
+  return true;
 }
 
 function selectDay(date){
@@ -510,6 +527,10 @@ function selectDay(date){
       showToast(t('err_min_stay'), true);
       return;
     }
+    if (!rangeFullyAvailable(cal.draft.start, date)){
+      showToast(t('err_unavailable'), true);
+      return;
+    }
     commitDeparture(date);
     return;
   }
@@ -526,6 +547,10 @@ function selectDay(date){
       const nights = daysBetween(cal.draft.start, date);
       if (nights < state.minimumStayNights){
         showToast(t('err_min_stay'), true);
+        return;
+      }
+      if (!rangeFullyAvailable(cal.draft.start, date)){
+        showToast(t('err_unavailable'), true);
         return;
       }
       commitDeparture(date);
