@@ -221,7 +221,9 @@ input, select, textarea{ font-family: inherit; color: inherit; }
   z-index: 60;
   animation: popOpen .22s ease-out;
 }
-.search-pop.open{ display: block; }
+.search-pop.open{ 
+  display: block;
+ }
 @keyframes popOpen{
   from { opacity: 0; transform: translateY(-6px); }
   to   { opacity: 1; transform: translateY(0); }
@@ -263,21 +265,37 @@ input, select, textarea{ font-family: inherit; color: inherit; }
 .stepper-row{
   display: flex;
   align-items: center;
+  text-align: left;
   justify-content: space-between;
   padding: 14px 4px;
   gap: 16px;
   border-bottom: 1px solid var(--line);
 }
 .stepper-row:last-child{ border-bottom: none; }
+.stepper-row > div:first-child{
+  flex: 1;
+  min-width: 0;
+  text-align: left;
+}
+.pop-guests .stepper-row > div:first-child,
+.pop-bedrooms .stepper-row > div:first-child,
+.pop-guests .stepper-title,
+.pop-guests .stepper-sub,
+.pop-bedrooms .stepper-title,
+.pop-bedrooms .stepper-sub{
+  text-align: left !important;
+}
 .stepper-title{
   font-size: 15px;
   font-weight: 600;
   color: var(--ink);
+  text-align: left;
 }
 .stepper-sub{
   font-size: 12.5px;
   color: var(--muted);
   margin-top: 2px;
+  text-align: left;
 }
 .stepper{
   display: inline-flex;
@@ -560,12 +578,17 @@ input, select, textarea{ font-family: inherit; color: inherit; }
   position: absolute;
   top: 10px;
   left: 16px;
+  right: 16px;
   font-size: 11px;
   font-weight: 600;
   letter-spacing: .04em;
   color: var(--muted);
   text-transform: uppercase;
   pointer-events: none;
+  white-space: normal;
+  overflow-wrap: break-word;
+  word-break: break-word;
+  line-height: 1.2;
 }
 .field input,
 .field select,
@@ -605,15 +628,27 @@ input, select, textarea{ font-family: inherit; color: inherit; }
   padding-top: 0;     /* the country/input themselves carry the 28px top */
   width: 100%;
 }
+/* Keep the "Telefoonnummer" label within the country-code column
+   (left of the grey divider). Country slot is now 40% wide, so the
+   label sits on one line inside it. */
+.phone-field > label{
+  right: auto;
+  max-width: calc(40% - 18px);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  line-height: 1.15;
+}
 .phone-country{
-  flex: 0 0 25%;
-  width: 25%;
+  flex: 0 0 40%;
+  width: 40%;
   min-width: 0;
   border: none;
   outline: none;
   background: transparent;
-  /* Same vertical padding as .field input/select to match field heights. */
-  padding: 28px 22px 12px 14px;
+  /* Same vertical padding as .field input/select to match field heights.
+     Right padding leaves room for the arrow drawn just after "🇳🇱 +31". */
+  padding: 28px 14px 12px 14px;
   font-size: 14px;
   font-weight: 600;
   color: var(--ink);
@@ -622,15 +657,17 @@ input, select, textarea{ font-family: inherit; color: inherit; }
   cursor: pointer;
   background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='10' height='6' viewBox='0 0 14 8'><path fill='none' stroke='%230B1226' stroke-width='2' stroke-linecap='round' stroke-linejoin='round' d='M1 1l6 6 6-6'/></svg>");
   background-repeat: no-repeat;
-  background-position: right 6px center;
+  background-position: left 80px center;
   border-right: 1px solid var(--line);
-  text-overflow: ellipsis;
+  white-space: normal;
+  overflow-wrap: break-word;
+  word-break: break-word;
   overflow: hidden;
-  white-space: nowrap;
+  max-width: 100%;
 }
 .phone-field input#phone{
-  flex: 1 1 75%;
-  width: 75%;
+  flex: 1 1 60%;
+  width: 60%;
   min-width: 0;
   padding: 28px 16px 12px;
   font-size: 15px;
@@ -1039,10 +1076,10 @@ input, select, textarea{ font-family: inherit; color: inherit; }
   gap: 12px;
 }
 @media (min-width: 720px){
-  .car-grid{ grid-template-columns: repeat(2, 1fr); }
+  .car-grid{ grid-template-columns: repeat(3, 1fr); }
 }
 @media (min-width: 1100px){
-  .car-grid{ grid-template-columns: repeat(4, 1fr); }
+  .car-grid{ grid-template-columns: repeat(3, 1fr); }
 }
 .car-card{
   position: relative;
@@ -1376,32 +1413,38 @@ body.panel-open{ overflow: hidden; }
 }
 .cdd-custom input:focus{ border-color: var(--ink); }
 
-/* Phone dial-code variant — sits in the 25% slot of .phone-row,
+/* Phone dial-code variant — sits in the 40% slot of .phone-row,
    matches the typography/padding of the previous native select. */
 .phone-row .cdd.cdd-phone{
-  flex: 0 0 25%;
-  width: 25%;
+  flex: 0 0 40%;
+  width: 40%;
   min-width: 0;
   border-right: 1px solid var(--line);
 }
 .cdd.cdd-phone .cdd-trigger{
-  padding: 28px 22px 12px 14px;
+  padding: 28px 14px 12px 14px;
   font-size: 14px;
   font-weight: 600;
   gap: 6px;
+  justify-content: flex-start;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  max-width: 100%;
+  min-width: 0;
 }
 .cdd.cdd-phone .cdd-arrow{ width: 10px; height: 6px; }
 .cdd-custom .cdd-custom-go{
   padding: 8px 14px;
-  background: var(--ink);
-  color: #fff;
+  background: #FFF04A;
+  color: var(--ink);
   border-radius: 0 8px 8px 0;
   font-weight: 600;
   font-size: 13px;
   border: none;
   cursor: pointer;
 }
-.cdd-custom .cdd-custom-go:hover{ background: #1a2240; }
+.cdd-custom .cdd-custom-go:hover{ background: var(--yellow-deep); }
 
 /* ============================================================
    INLINE CALENDAR HOST (when "Edit" on stay-summary is clicked
